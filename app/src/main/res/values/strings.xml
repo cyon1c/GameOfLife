@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">Conway\'s Game of Life</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="total_cycles" formatted="false">Cycles: %d</string>
+    <string name="num_cycles_seeds" formatted="false">Cycles in Seed: %d</string>
+    <string name="total_seeds" formatted="false">Seeds: %d</string>
+    <string name="average_cycles" formatted="false">Cycles/Seed: %d</string>
+    <string name="generate_button_label">Generate</string>
+    <string name="start_game_label">Start Game</string>
+    <string name="stop_game_label">Stop Game</string>
+</resources>
