@@ -32,14 +32,7 @@ public class Game extends Observable{
     Runnable mGameRunnable = new Runnable() {
         @Override
         public void run() {
-            generateNewState();
-            propogateNewState();
-            Bundle b = new Bundle();
-            b.putBoolean("counter", true);
-            setChanged();
-            notifyObservers(b);
-            clearChanged();
-            gameLoop.postDelayed(mGameRunnable, 500);
+            initiateStateChange();
         }
     };
 
@@ -128,6 +121,17 @@ public class Game extends Observable{
             reSeed = false;
         }
         totalFlips = 0;
+    }
+
+    private void initiateStateChange(){
+        generateNewState();
+        propogateNewState();
+        Bundle b = new Bundle();
+        b.putBoolean("counter", true);
+        setChanged();
+        notifyObservers(b);
+        clearChanged();
+        gameLoop.postDelayed(mGameRunnable, 500);
     }
 
     private void turnOffCell(int location){
