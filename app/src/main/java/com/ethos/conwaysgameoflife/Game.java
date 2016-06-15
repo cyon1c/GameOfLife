@@ -4,8 +4,10 @@ import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.Handler;
+import android.util.Log;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Observable;
 import java.util.Observer;
 
@@ -25,6 +27,7 @@ public class Game extends Observable{
 
     ArrayList<Cell> mCellList;
     ArrayList<Boolean> mNewStateList;
+    ArrayList<Integer> mNeighborList;
     int totalFlips = 0;
     boolean reSeed = false;
 
@@ -32,7 +35,10 @@ public class Game extends Observable{
     Runnable mGameRunnable = new Runnable() {
         @Override
         public void run() {
+            long before = System.currentTimeMillis();
             initiateStateChange();
+            long after = System.currentTimeMillis();
+            Log.i("Game", "Speed: " + Long.toString(after - before));
         }
     };
 
@@ -47,6 +53,7 @@ public class Game extends Observable{
         mWhiteCell = mContext.getDrawable(R.drawable.white_cell);
         mCellList = cells;
         mNewStateList = new ArrayList<>();
+        mNeighborList = new ArrayList<>(Collections.nCopies(mTotalCells, 0));
         for(int i = 0; i < mCellList.size(); i++){
             if(mCellList.get(i).isAlive()){
                 mCellList.get(i).setBackground(mBlackCell);
@@ -65,23 +72,22 @@ public class Game extends Observable{
     }
 
     private boolean verifyCellState(int location){
-        int livingNeighbors = tallyLivingNeighbors(location);
 
         if(isCellAlive(location)){
-            if(livingNeighbors < 2) {
+            if(mNeighborList.get(location) < 2) {
                 mNewStateList.set(location, false);
                 return true;
             }
-            else if(livingNeighbors == 2 || livingNeighbors == 3) {
+            else if(mNeighborList.get(location) == 2 || mNeighborList.get(location) == 3) {
                 mNewStateList.set(location, true);
                 return false;
             }
-            else if(livingNeighbors > 3) {
+            else if(mNeighborList.get(location) > 3) {
                 mNewStateList.set(location, false);
                 return true;
             }
         }else {
-            if (livingNeighbors == 3) {
+            if (mNeighborList.get(location) == 3) {
                 mNewStateList.set(location, true);
                 return true;
             } else {
@@ -93,10 +99,71 @@ public class Game extends Observable{
     }
 
     private void generateNewState(){
-        for (int i =0; i < mCellList.size(); i++) {
-            if(verifyCellState(i))
-                totalFlips++;
+//        for (int i =0; i < mCellList.size(); i++) {
+//            if(verifyCellState(i))
+//                totalFlips++;
+//        }
+
+        for(int location = 0; location < mCellList.size(); location++){
+            if(mCellList.get(location).isAlive()) {
+                if (location == 0) {
+                    mNeighborList.set(location + 1, (mNeighborList.get(location+1)+1));
+                    mNeighborList.set(location + mColumns, (mNeighborList.get(location + mColumns)+1));
+                    mNeighborList.set(location + mColumns + 1, (mNeighborList.get(location + mColumns + 1)+1));
+                } else if (location == mColumns) {
+                    mNeighborList.set(location - 1, mNeighborList.get(location - 1)+1);
+                    mNeighborList.set(location + mColumns - 1, mNeighborList.get(location + mColumns - 1)+1);
+                    mNeighborList.set(location + mColumns, mNeighborList.get(location + mColumns)+1);
+                } else if (location - mColumns < 0) {
+                    mNeighborList.set(location + 1, mNeighborList.get(location + 1)+1);
+                    mNeighborList.set(location - 1, mNeighborList.get(location - 1)+1);
+                    mNeighborList.set(location + mColumns - 1, mNeighborList.get(location + mColumns - 1)+1);
+                    mNeighborList.set(location + mColumns, mNeighborList.get(location + mColumns)+1);
+                    mNeighborList.set(location + mColumns + 1, mNeighborList.get(location + mColumns + 1)+1);
+                } else if (location == mTotalCells - 1) {
+                    mNeighborList.set( location - 1, mNeighborList.get(location - 1)+1);
+                    mNeighborList.set( location - mColumns - 1, mNeighborList.get(location - mColumns - 1)+1);
+                    mNeighborList.set( location - mColumns, mNeighborList.get(location - mColumns)+1);
+                } else if (location == (mTotalCells - mColumns)) {
+                    mNeighborList.set( location + 1, mNeighborList.get(location + 1)+1);
+                    mNeighborList.set( location - mColumns, mNeighborList.get(location - mColumns)+1);
+                    mNeighborList.set( location - mColumns + 1, mNeighborList.get(location - mColumns + 1)+1);
+                } else if (location % mColumns == 0) {
+                    mNeighborList.set( location + 1, mNeighborList.get(location + 1)+1);
+                    mNeighborList.set( location + mColumns, mNeighborList.get(location + mColumns)+1);
+                    mNeighborList.set( location + mColumns + 1, mNeighborList.get(location + mColumns + 1)+1);
+                    mNeighborList.set( location - mColumns, mNeighborList.get(location - mColumns)+1);
+                    mNeighborList.set( location - mColumns + 1, mNeighborList.get(location - mColumns + 1)+1);
+                } else if (location % mColumns == mColumns - 1) {
+                    mNeighborList.set( location - 1, mNeighborList.get(location - 1)+1);
+                    mNeighborList.set( location + mColumns - 1, mNeighborList.get(location + mColumns - 1)+1);
+                    mNeighborList.set( location + mColumns, mNeighborList.get(location + mColumns)+1);
+                    mNeighborList.set( location - mColumns - 1, mNeighborList.get(location - mColumns - 1)+1);
+                    mNeighborList.set( location - mColumns, mNeighborList.get(location - mColumns)+1);
+                } else if (location + mColumns > mTotalCells) {
+                    mNeighborList.set( location + 1, mNeighborList.get(location + 1)+1);
+                    mNeighborList.set( location - 1, mNeighborList.get(location - 1)+1);
+                    mNeighborList.set( location - mColumns - 1, mNeighborList.get(location - mColumns - 1)+1);
+                    mNeighborList.set( location - mColumns, mNeighborList.get(location - mColumns)+1);
+                    mNeighborList.set( location - mColumns + 1, mNeighborList.get(location - mColumns + 1)+1);
+                } else {
+                    mNeighborList.set( location + 1, mNeighborList.get(location + 1)+1);
+                    mNeighborList.set( location - 1, mNeighborList.get(location - 1)+1);
+                    mNeighborList.set( location + mColumns - 1, mNeighborList.get(location + mColumns - 1)+1);
+                    mNeighborList.set( location + mColumns, mNeighborList.get(location + mColumns)+1);
+                    mNeighborList.set( location + mColumns + 1, mNeighborList.get(location + mColumns + 1)+1);
+                    mNeighborList.set( location - mColumns - 1, mNeighborList.get(location - mColumns - 1)+1);
+                    mNeighborList.set( location - mColumns, mNeighborList.get(location - mColumns)+1);
+                    mNeighborList.set( location - mColumns + 1, mNeighborList.get(location - mColumns + 1)+1);
+                }
+            }
         }
+        for(int i = 0; i < mCellList.size(); i++){
+            if(verifyCellState(i)){
+                totalFlips ++;
+            }
+        }
+        mNeighborList = new ArrayList<>(Collections.nCopies(mNeighborList.size(), 0));
     }
 
     private void propogateNewState(){
